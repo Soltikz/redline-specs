@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:        #0A0A0A;
+  --bg-1:      #111111;
+  --bg-2:      #181818;
+  --bg-3:      #252525;
+
+  --accent:    #6EFF47;
+  --accent-2:  #C8FF00;
+  --accent-dim: rgba(110, 255, 71, 0.10);
+  --accent-border: rgba(110, 255, 71, 0.35);
+
+  --text:      #FFFFFF;
+  --text-2:    #E8E8E8;
+  --text-3:    #888888;
+
+  --border:    rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(110, 255, 71, 0.4);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Empêche le scroll sur la hero */
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Arial Black', 'Arial', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ─── Fond décoratif global : grille fine + lueur verte ─── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(110,255,71,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110,255,71,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(110,255,71,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Tout le contenu passe au-dessus du fond décoratif */
+#__next, main, header, footer, section, .above-bg {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Typo ─── */
+.mono {
+  font-family: 'Geist Mono', 'Courier New', monospace;
+}
+
+.label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.label-dim {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+}
+
+.card-accent {
+  background: var(--bg-1);
+  border: 1px solid var(--border-accent);
+}
+
+/* ─── Accent line ─── */
+.stripe {
+  height: 2px;
+  background: var(--accent);
+  width: 100%;
+}
+
+/* ─── Buttons ─── */
+.btn-primary {
+  background: var(--accent);
+  color: #0A0A0A;
+  font-family: 'Arial Black', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-primary:hover  { background: var(--accent-2); }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover {
+  border-color: var(--border-accent);
+  color: var(--accent);
+}
+
+/* ─── Stat block ─── */
+.stat-block {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stat-block.accent {
+  border-color: var(--border-accent);
+  background: var(--accent-dim);
+}
+.stat-value {
+  font-family: 'Arial Black', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.stat-value.green { color: var(--accent); }
+.stat-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--accent);
+  color: #0A0A0A;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
