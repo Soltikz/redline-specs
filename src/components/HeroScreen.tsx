@@ -106,7 +106,7 @@ export function HeroScreen({ onStart }: HeroScreenProps) {
             LANCER LE CONFIGURATEUR →
           </button>
           <span className="mono" style={{ fontSize: 10, color: "var(--text-3)", letterSpacing: "0.15em" }}>
-            15 MARQUES · TOUTES CATÉGORIES
+            15 MARQUES ET PLUS · TOUTES CATÉGORIES
           </span>
         </div>
 
