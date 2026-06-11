@@ -35,6 +35,9 @@ export interface ApiNinjasBike {
   seat_height?: string;
   fuel_capacity?: string;
   fuel_consumption?: string;
+  top_speed?: string;
+  zero_to_hundred?: string;
+  acceleration?: string;
 }
 
 export interface BikeSpecs {
@@ -68,6 +71,8 @@ export interface BikeSpecs {
   seatHeight?: string;
   fuelCapacity?: string;
   fuelConsumption?: string;
+  topSpeed?: string;
+  acceleration0To100?: string;
   weight: string;
 
   // ─── Contenu éditorial ───

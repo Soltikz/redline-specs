@@ -156,6 +156,8 @@ export function BikeDashboard({ bike, youtubeSearchUrl, reset }: BikeDashboardPr
           {[
             { l: "PUISSANCE", v: bike.power },
             { l: "CYLINDRÉE", v: bike.displacement },
+            { l: "VITESSE MAX", v: bike.topSpeed },
+            { l: "0-100 km/h", v: bike.acceleration0To100 },
             { l: "POIDS",     v: bike.weight },
             { l: "COUPLE",    v: bike.torque },
           ].map(({ l, v }) => v ? (
@@ -182,6 +184,12 @@ export function BikeDashboard({ bike, youtubeSearchUrl, reset }: BikeDashboardPr
       </div>
 
       {/* ─── TRANSMISSION ─── */}
+      <SectionTitle>Performance</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 2, marginBottom: 24 }}>
+        <SpecRow label="Vitesse Maxi" value={bike.topSpeed} accent />
+        <SpecRow label="0-100 km/h" value={bike.acceleration0To100} accent />
+      </div>
+
       <SectionTitle>Transmission & Châssis</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 2, marginBottom: 24 }}>
         <SpecRow label="Boîte de Vitesses"     value={bike.gearbox} />

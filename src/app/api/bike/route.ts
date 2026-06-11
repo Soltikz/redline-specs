@@ -211,6 +211,17 @@ function formatFuelConsumption(raw?: string | null) {
   return number ? `${number} l/100 km` : translateCommon(raw);
 }
 
+function formatTopSpeed(raw?: string | null) {
+  const number = extractFirstNumber(raw);
+  return number ? `${number} km/h` : translateCommon(raw);
+}
+
+function formatAcceleration(raw?: string | null) {
+  if (!hasValue(raw)) return null;
+  const number = extractFirstNumber(raw);
+  return number ? `${number} s` : translateCommon(raw);
+}
+
 function formatSimpleMetric(raw?: string | null) {
   return translateCommon(raw);
 }
@@ -282,6 +293,8 @@ Format JSON obligatoire :
   "seatHeight": "825 mm",
   "fuelCapacity": "14 litres",
   "fuelConsumption": "5.0 l/100 km",
+  "topSpeed": "300 km/h",
+  "acceleration0To100": "3,2 s",
   "firingOrder": "calage moteur exact",
   "youtubeSoundId": "",
   "anecdote": "2 à 3 phrases sur une seule ligne",
@@ -467,6 +480,8 @@ export async function POST(req: Request) {
         'seatHeight',
         'fuelCapacity',
         'fuelConsumption',
+        'topSpeed',
+        'acceleration0To100',
         'firingOrder',
         'youtubeSoundId',
         'anecdote',
@@ -531,6 +546,12 @@ export async function POST(req: Request) {
       fuelConsumption: choose(
         enrichment.fuelConsumption,
         formatFuelConsumption(raw?.fuel_consumption)
+      ),
+      topSpeed: choose(enrichment.topSpeed, formatTopSpeed(raw?.top_speed)),
+      acceleration0To100: choose(
+        enrichment.acceleration0To100,
+        formatAcceleration(raw?.zero_to_hundred),
+        formatAcceleration(raw?.acceleration)
       ),
 
       firingOrder: choose(enrichment.firingOrder),

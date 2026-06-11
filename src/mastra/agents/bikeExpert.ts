@@ -44,6 +44,8 @@ Exemple de structure :
   "seatHeight": "825 mm",
   "fuelCapacity": "14 litres",
   "fuelConsumption": "5.0 l/100 km",
+  "topSpeed": "300 km/h",
+  "acceleration0To100": "3,2 s",
   "firingOrder": "calage moteur exact",
   "youtubeSoundId": "",
   "anecdote": "texte sur une seule ligne",
