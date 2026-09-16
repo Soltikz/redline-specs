@@ -43,6 +43,7 @@ async function fetchApiYears(brand: string, model: string): Promise<number[]> {
 
 async function fetchGroqRange(brand: string, model: string) {
   const apiKey = process.env.GROQ_API_KEY ?? '';
+  console.log('[DEBUG years] GROQ_API_KEY présente ?', apiKey ? `oui (${apiKey.slice(0, 4)}...)` : 'NON');
   if (!apiKey) return null;
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -52,9 +53,10 @@ async function fetchGroqRange(brand: string, model: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-120b',
       temperature: 0.1,
-      max_tokens: 60,
+      max_tokens: 500, // augmenté (était 60) : gpt-oss consomme du budget en reasoning interne
+      reasoning_effort: 'low', // limite le "raisonnement" pour laisser de la place à la réponse JSON
       response_format: { type: 'json_object' },
       messages: [
         {
@@ -71,10 +73,15 @@ Remplace XXXX par les années réelles. Pas de texte, pas d'explication.`,
     }),
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('[DEBUG years] Groq API error:', res.status, res.statusText, errText);
+    return null;
+  }
 
   const data = await res.json();
   const content = data?.choices?.[0]?.message?.content ?? '';
+  console.log('[DEBUG years] Groq raw content:', content);
 
   try {
     const parsed = JSON.parse(content);
@@ -89,7 +96,8 @@ Remplace XXXX par les années réelles. Pas de texte, pas d'explication.`,
       startYear,
       endYear: currentProduction ? CURRENT_YEAR : endYear,
     };
-  } catch {
+  } catch (err) {
+    console.error('[DEBUG years] JSON parse failed on Groq content:', content);
     return null;
   }
 }
@@ -99,6 +107,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const brand = typeof body.brand === 'string' ? body.brand.trim() : '';
     const model = typeof body.model === 'string' ? body.model.trim() : '';
+
+    console.log('[DEBUG years] POST /api/models/years body reçu:', { brand, model });
 
     if (!brand || !model) {
       return NextResponse.json(
@@ -111,6 +121,8 @@ export async function POST(req: Request) {
       fetchApiYears(brand, model),
       fetchGroqRange(brand, model),
     ]);
+
+    console.log('[DEBUG years] apiYears:', apiYears, '| aiRange:', aiRange);
 
     if (aiRange) {
       const allYears = [...apiYears, aiRange.startYear, aiRange.endYear];

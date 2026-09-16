@@ -16,6 +16,7 @@ async function filterAndAugmentWithAi(
   rawApiModels: string[]
 ): Promise<string[]> {
   const apiKey = process.env.GROQ_API_KEY ?? '';
+  console.log('[DEBUG] GROQ_API_KEY présente ?', apiKey ? `oui (${apiKey.slice(0, 4)}...)` : 'NON');
   if (!apiKey) return [];
 
   const categoryDescriptions: Record<PowerCategory, string> = {
@@ -43,6 +44,9 @@ ${JSON.stringify(rawApiModels)}
 
 Mission : Renvoie un objet JSON contenant exclusivement les modèles de cette liste (ou des modèles réels oubliés de cette marque) qui matchent STRICTEMENT et simultanément avec la puissance ET le type demandé. Élimine sans pitié les hors-sujets (ex: pas de 125 en A2, pas de sportive en routière).`;
 
+  console.log('[DEBUG] Prompt envoyé à Groq (brand/power/type):', brand, powerCategory, type);
+  console.log('[DEBUG] rawApiModels count:', rawApiModels.length);
+
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -51,9 +55,10 @@ Mission : Renvoie un objet JSON contenant exclusivement les modèles de cette li
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         temperature: 0.1, // Basse température pour éviter que l'IA n'invente des catégories
-        max_tokens: 200,
+        max_tokens: 1500, // gpt-oss consomme du budget en reasoning interne avant de répondre
+        reasoning_effort: 'low', // limite le temps de "réflexion" pour laisser de la place à la réponse JSON
         response_format: { type: 'json_object' },
         messages: [
           {
@@ -72,17 +77,31 @@ Ne mets jamais le nom de la marque dans le nom du modèle. Ne mets aucun texte a
       }),
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[DEBUG] Groq API error:', res.status, res.statusText, errText);
+      return [];
+    }
 
     const data = await res.json();
     const content = data?.choices?.[0]?.message?.content ?? '';
-    const parsed = JSON.parse(content);
-    
+    console.log('[DEBUG] Groq raw content:', content);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseErr) {
+      console.error('[DEBUG] JSON parse failed on Groq content:', content);
+      return [];
+    }
+
+    console.log('[DEBUG] Groq parsed.models:', parsed?.models);
+
     return Array.isArray(parsed.models) 
       ? parsed.models.filter((m: unknown): m is string => typeof m === 'string') 
       : [];
   } catch (err) {
-    console.error('Error during AI filtering:', err);
+    console.error('[DEBUG] Error during AI filtering (network/exception):', err);
     return [];
   }
 }
@@ -93,6 +112,8 @@ export async function POST(req: Request) {
     const brand = typeof body.brand === 'string' ? body.brand.trim() : '';
     const powerCategory = body.powerCategory as PowerCategory;
     const type = typeof body.type === 'string' ? body.type.trim().toLowerCase() : '';
+
+    console.log('[DEBUG] POST /api/models body reçu:', { brand, powerCategory, type });
 
     if (!brand || !powerCategory || !type) {
       return NextResponse.json(
@@ -114,19 +135,27 @@ export async function POST(req: Request) {
         }
       );
 
+      console.log('[DEBUG] API-Ninjas status:', apiRes.status);
+
       if (apiRes.ok) {
         const data = await apiRes.json();
         if (Array.isArray(data)) {
           rawApiModels = data.map((bike: any) => bike.model?.trim() ?? '').filter(Boolean);
         }
+      } else {
+        console.warn('[DEBUG] API-Ninjas non-ok:', apiRes.status, await apiRes.text());
       }
     } catch (e) {
-      console.warn('API-Ninjas inaccessible, l\'IA va travailler en autonomie complète.');
+      console.warn('API-Ninjas inaccessible, l\'IA va travailler en autonomie complète.', e);
     }
+
+    console.log('[DEBUG] rawApiModels après API-Ninjas:', rawApiModels);
 
     // 2. On passe la patate chaude à l'IA : c'est elle qui valide, trie, exclut et nettoie tout d'un coup
     const filteredModels = await filterAndAugmentWithAi(brand, powerCategory, type, dedupe(rawApiModels));
     const finalModels = dedupe(filteredModels);
+
+    console.log('[DEBUG] finalModels:', finalModels);
 
     if (finalModels.length === 0) {
       return NextResponse.json(

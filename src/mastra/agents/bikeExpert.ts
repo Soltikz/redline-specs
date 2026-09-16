@@ -54,5 +54,5 @@ Exemple de structure :
   "vsLastYear": "texte sur une seule ligne",
   "issues": ["défaut 1", "défaut 2", "défaut 3"]
 }`,
-  model: 'groq/llama-3.3-70b-versatile',
+  model: 'groq/openai/gpt-oss-120b',
 });
